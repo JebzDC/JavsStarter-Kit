@@ -12,6 +12,8 @@ export type User = {
 
 export type Auth = {
     user: User;
+    permissions: string[];
+    roles: string[];
 };
 
 export type TwoFactorSetupData = {
@@ -21,4 +23,21 @@ export type TwoFactorSetupData = {
 
 export type TwoFactorSecretKey = {
     secretKey: string;
+};
+
+export type Role = {
+    id: number;
+    name: string;
+    guard_name: string;
+    permissions: Permission[];
+    created_at: string;
+    updated_at: string;
+};
+
+export type Permission = {
+    id: number;
+    name: string;
+    guard_name: string;
+    created_at: string;
+    updated_at: string;
 };
