@@ -16,9 +16,20 @@ class UserController extends Controller
     /**
      * Display a listing of the users.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
-        $users = User::with(['roles', 'permissions'])->get();
+        $search = $request->query('search', '');
+
+        $users = User::with(['roles', 'permissions'])
+            ->when($search, function ($query) use ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
+                });
+            })
+            ->paginate(10)
+            ->withQueryString();
+
         $roles = Role::all();
         $permissions = Permission::all();
 
@@ -26,6 +37,7 @@ class UserController extends Controller
             'users' => $users,
             'roles' => $roles,
             'permissions' => $permissions,
+            'search' => $search,
         ]);
     }
 
