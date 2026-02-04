@@ -1,6 +1,7 @@
 // import { NavFooter } from '@/components/nav-footer';
 import { useAuthPermissions } from '@/hooks/use-auth';
 import { NavMain } from '@/components/nav-main';
+import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
     SidebarContent,
@@ -16,7 +17,7 @@ import { index as createRoles } from '@/routes/admin/roles';
 import { index as createUser } from '@/routes/admin/users';
 import type { NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { BookOpen, Folder, LayoutGrid } from 'lucide-react';
+import { BookOpen, Key, LayoutGrid, User, UserIcon } from 'lucide-react';
 import AppLogo from './app-logo';
 
 // const footerNavItems: NavItem[] = [
@@ -42,10 +43,10 @@ export function AppSidebar() {
             icon: LayoutGrid,
         },
         ...(canPermission('manage users')
-            ? [{ title: 'Create User', href: createUser(), icon: BookOpen }]
+            ? [{ title: 'Create User', href: createUser(), icon: UserIcon }]
             : []),
         ...(canPermission('manage roles')
-            ? [{ title: 'Create Roles ', href: createRoles(), icon: Folder }]
+            ? [{ title: 'Create Roles ', href: createRoles(), icon: Key }]
             : []),
         // ...(canPermission('manage permissions')
         //     ? [{ title: 'Create Permissions', href: createPermissions(), icon: Folder }]
@@ -70,11 +71,8 @@ export function AppSidebar() {
                 <NavMain items={mainNavItems} />
             </SidebarContent>
 
-            <SidebarFooter>
-                {/* <NavFooter items={footerNavItems} className="mt-auto" /> */}
-                <span className="mb-0.5 truncate leading-tight font-normal">
-                    Developed by Javes Cordova
-                </span>
+            <SidebarFooter className="sticky bottom-0 mt-auto border-t border-sidebar-border bg-sidebar py-2">
+                <NavUser variant="sidebar" />
             </SidebarFooter>
         </Sidebar>
     );

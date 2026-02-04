@@ -158,7 +158,7 @@ export default function Welcome({
                                 asChild
                             >
                                 <a
-                                    href="https://github.com"
+                                    href="https://github.com/JebzDC"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >

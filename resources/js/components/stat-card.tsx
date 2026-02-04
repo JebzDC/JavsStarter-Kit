@@ -35,22 +35,20 @@ export function StatCard({ label, value, subtext, icon: Icon, variant }: StatCar
     const styles = variants[variant];
 
     return (
-        <div className={`relative flex flex-col justify-between rounded-2xl p-6 shadow-sm ${styles.card}`}>
-            <div className="flex items-center justify-between mb-8">
-                <div className={`rounded-xl p-2.5 text-white ${styles.iconBg}`}>
-                    <Icon className="h-6 w-6" />
+        <div className={`relative flex flex-col justify-between rounded-xl p-4 shadow-sm ${styles.card}`}>
+            <div className="flex items-center justify-between mb-3">
+                <div className={`rounded-lg p-1.5 text-white ${styles.iconBg}`}>
+                    <Icon className="h-4 w-4" />
                 </div>
-                <button className="text-gray-500 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/10 p-1 rounded-full transition-colors">
-                    <MoreVertical className="h-5 w-5" />
-                </button>
+               
             </div>
 
-            <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{label}</p>
-                <p className={`text-4xl font-bold tracking-tight ${styles.text}`}>
+            <div className="space-y-0.5">
+                <p className="text-xs font-medium text-gray-600 dark:text-gray-300">{label}</p>
+                <p className={`text-2xl font-bold tracking-tight ${styles.text}`}>
                     {typeof value === 'number' ? value.toLocaleString() : value}
                 </p>
-                <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 pt-2 opacity-80">
+                <p className="text-[10px] font-medium text-gray-500 dark:text-gray-400 opacity-80">
                     {subtext}
                 </p>
             </div>

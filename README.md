@@ -165,6 +165,23 @@ const mainNavItems: NavItem[] = [
 
 Add or remove permissions in the same way to control which sidebar links each user sees.
 
+#### Adding a new permission (hardcoded in code)
+
+When you introduce a new permission in code (e.g. `canPermission('manage posts')` in the sidebar, a controller, or a policy), **you must also add that permission to the seeder** so it exists in the database and can be assigned to roles.
+
+Edit `database/seeders/RolesAndPermissionsSeeder.php` and add the permission name to the `$permissions` array:
+
+```php
+$permissions = [
+    'manage users',
+    'manage roles',
+    'manage permissions',
+    'manage posts',   // add any new permission here
+];
+```
+
+Then run `php artisan db:seed` (or re-run the seeder) so the new permission is created. After that, assign it to the appropriate roles (e.g. `super-admin`, `admin`) in the same seeder if needed.
+
 ---
 
 ## Tech stack
