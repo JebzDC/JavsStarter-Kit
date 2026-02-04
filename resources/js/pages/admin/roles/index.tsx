@@ -122,15 +122,7 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
             <Head title="Roles Management" />
 
             <div className="w-full space-y-8 px-6 py-6 md:px-4">
-                {/* Page header */}
-                <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                        Roles
-                    </h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Manage access roles and their permissions.
-                    </p>
-                </div>
+                
 
                 {/* Stat cards */}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
