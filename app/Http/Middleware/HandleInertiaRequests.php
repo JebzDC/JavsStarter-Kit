@@ -38,7 +38,7 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
-        // Get permissions - super-admin gets all permissions
+        // Get permissions - super-admin gets all permissions (dynamic: new permissions work automatically)
         $permissions = [];
         if ($user) {
             if ($user->hasRole('super-admin')) {
@@ -48,12 +48,16 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
+        // Build can object for dynamic permission checks: auth.can['permission name']
+        $can = array_fill_keys($permissions, true);
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
             'auth' => [
                 'user' => $user,
                 'permissions' => $permissions,
+                'can' => $can,
                 'roles' => $user ? $user->getRoleNames()->toArray() : [],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',

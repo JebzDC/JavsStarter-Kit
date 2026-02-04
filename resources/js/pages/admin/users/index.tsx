@@ -224,10 +224,7 @@ export default function UsersIndex({ users: usersProp, roles, permissions, searc
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Users Management" />
             <div className="flex h-full min-w-0 flex-1 flex-col gap-6 p-4 sm:gap-8 sm:p-6 md:p-8">
-                <div className="border-b border-border/50 pb-6">
-                    <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Users</h1>
-                    <p className="mt-1 text-sm text-muted-foreground sm:text-base">Manage administrative access and user profiles.</p>
-                </div>
+                
 
                 <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
                     <StatCard label="Total Users" value={users.meta.total} subtext="Total registered accounts" icon={Users} variant="cyan" />
@@ -270,10 +267,7 @@ export default function UsersIndex({ users: usersProp, roles, permissions, searc
                 </div>
 
                 <Card className="overflow-hidden rounded-xl border border-border/60 bg-card/50 shadow-lg ring-1 ring-border/40 sm:rounded-2xl dark:border-border/40 dark:bg-card/30 dark:ring-border/20">
-                    <CardHeader className="border-b border-border/50 bg-muted/5 px-4 py-4 dark:bg-muted/10 sm:px-6 sm:py-5">
-                        <CardTitle className="text-sm font-bold tracking-tight sm:text-base">Member Directory</CardTitle>
-                        <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1">View and manage all registered users</p>
-                    </CardHeader>
+                  
                     <div className="relative w-full overflow-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {users.data.length > 0 && (
                             <>
