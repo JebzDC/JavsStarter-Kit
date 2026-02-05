@@ -12,6 +12,26 @@
 
 ---
 
+## UI
+
+### Landing page
+
+![Landing page](public/images/screenshots/landing.png)
+
+### Login
+
+![Login](public/images/screenshots/login.png)
+
+### Users management
+
+![Users](public/images/screenshots/users.png)
+
+### Roles management
+
+![Roles](public/images/screenshots/roles.png)
+
+---
+
 ## Clone the project
 
 ```bash
