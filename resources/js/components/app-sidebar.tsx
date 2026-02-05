@@ -1,22 +1,23 @@
-import { Link } from '@inertiajs/react';
-import { Key, LayoutGrid, Shield, Users } from 'lucide-react';
-import { useMemo } from 'react';
 // import { NavFooter } from '@/components/nav-footer';
+import { useAuthPermissions } from '@/hooks/use-auth';
 import { NavMain } from '@/components/nav-main';
+import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
     SidebarContent,
+    SidebarFooter,
     SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
-import { useCan } from '@/hooks/use-can';
 import { dashboard } from '@/routes';
-import { index as permissionsIndex } from '@/routes/admin/permissions';
-import { index as rolesIndex } from '@/routes/admin/roles';
-import { index as usersIndex } from '@/routes/admin/users';
+import { index as createPermissions } from '@/routes/admin/permissions';
+import { index as createRoles } from '@/routes/admin/roles';
+import { index as createUser } from '@/routes/admin/users';
 import type { NavItem } from '@/types';
+import { Link } from '@inertiajs/react';
+import { BookOpen, Key, LayoutGrid, User, UserIcon } from 'lucide-react';
 import AppLogo from './app-logo';
 
 // const footerNavItems: NavItem[] = [
@@ -33,44 +34,24 @@ import AppLogo from './app-logo';
 // ];
 
 export function AppSidebar() {
-    const { can, hasRole } = useCan();
+    const { canPermission } = useAuthPermissions();
 
-    const mainNavItems: NavItem[] = useMemo(() => {
-        const items: NavItem[] = [
-            {
-                title: 'Dashboard',
-                href: dashboard(),
-                icon: LayoutGrid,
-            },
-        ];
-
-        // Admin section - show if user has permission or is admin
-        if (can('users.view') || can('manage users') || hasRole('admin') || hasRole('super-admin')) {
-            items.push({
-                title: 'Users',
-                href: usersIndex(),
-                icon: Users,
-            });
-        }
-        
-        if (can('manage roles') || can('roles.view') || hasRole('admin') || hasRole('super-admin')) {
-            items.push({
-                title: 'Roles',
-                href: rolesIndex(),
-                icon: Shield,
-            });
-        }
-
-        if (can('manage permissions') || can('permissions.view') || hasRole('admin') || hasRole('super-admin')) {
-            items.push({
-                title: 'Permissions',
-                href: permissionsIndex(),
-                icon: Key,
-            });
-        }
-
-        return items;
-    }, [can, hasRole]);
+    const mainNavItems: NavItem[] = [
+        {
+            title: 'Dashboard',
+            href: dashboard(),
+            icon: LayoutGrid,
+        },
+        ...(canPermission('manage users')
+            ? [{ title: 'Create User', href: createUser(), icon: UserIcon }]
+            : []),
+        ...(canPermission('manage roles')
+            ? [{ title: 'Create Roles ', href: createRoles(), icon: Key }]
+            : []),
+        // ...(canPermission('manage permissions')
+        //     ? [{ title: 'Create Permissions', href: createPermissions(), icon: Folder }]
+        //     : []),
+    ];
 
     return (
         <Sidebar collapsible="icon" variant="inset">
@@ -89,6 +70,10 @@ export function AppSidebar() {
             <SidebarContent>
                 <NavMain items={mainNavItems} />
             </SidebarContent>
+
+            <SidebarFooter className="sticky bottom-0 mt-auto border-t border-sidebar-border bg-sidebar py-2">
+                <NavUser variant="sidebar" />
+            </SidebarFooter>
         </Sidebar>
     );
 }

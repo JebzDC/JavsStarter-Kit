@@ -1,5 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
-import { User, Mail, Lock } from 'lucide-react';
+import { User, Mail, Lock, ArrowRight } from 'lucide-react';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -14,128 +14,156 @@ import { store } from '@/routes/register';
 export default function Register() {
     return (
         <AuthLayout
-            title="Create your account"
-            description="Get started with your free account in seconds"
+            title="Create an account"
+            description="Join thousands of professionals today."
         >
             <Head title="Register" />
+
             <Form
                 {...store.form()}
                 resetOnSuccess={['password', 'password_confirmation']}
                 disableWhileProcessing
-                className="flex flex-col gap-6"
+                className="space-y-6"
             >
                 {({ processing, errors }) => (
                     <>
-                        <div className="grid gap-5">
-                            <div className="grid gap-2">
-                                <Label htmlFor="name">Full name</Label>
-                                <div className="relative">
-                                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-                                    <Input
-                                        id="name"
-                                        type="text"
-                                        required
-                                        autoFocus
-                                        tabIndex={1}
-                                        autoComplete="name"
-                                        name="name"
-                                        placeholder="Javes Cordova"
-                                        className={cn(
-                                            'pl-10 transition-shadow duration-300 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]',
-                                            errors.name &&
-                                                'border-destructive focus-visible:ring-destructive/20',
-                                        )}
-                                    />
+                        <div className="space-y-5">
+                            <div className="grid gap-4">
+                                <div className="grid gap-2">
+                                    <Label
+                                        htmlFor="name"
+                                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80"
+                                    >
+                                        Full name
+                                    </Label>
+                                    <div className="group relative">
+                                        <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                                        <Input
+                                            id="name"
+                                            name="name"
+                                            placeholder="John Doe"
+                                            className={cn(
+                                                'h-11 rounded-xl border-zinc-200/80 pl-10 bg-zinc-50/80 transition-all duration-200 focus:ring-2 focus:ring-primary/20 dark:border-zinc-700/80 dark:bg-zinc-800/50',
+                                                errors.name &&
+                                                    'border-destructive focus:ring-destructive/20',
+                                            )}
+                                            autoFocus
+                                            required
+                                        />
+                                    </div>
+                                    <InputError message={errors.name} />
                                 </div>
-                                <InputError message={errors.name} />
+
+                                <div className="grid gap-2">
+                                    <Label
+                                        htmlFor="email"
+                                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80"
+                                    >
+                                        Email address
+                                    </Label>
+                                    <div className="group relative">
+                                        <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                                        <Input
+                                            id="email"
+                                            type="email"
+                                            name="email"
+                                            placeholder="name@company.com"
+                                            className={cn(
+                                                'h-11 rounded-xl border-zinc-200/80 pl-10 bg-zinc-50/80 transition-all duration-200 focus:ring-2 focus:ring-primary/20 dark:border-zinc-700/80 dark:bg-zinc-800/50',
+                                                errors.email &&
+                                                    'border-destructive focus:ring-destructive/20',
+                                            )}
+                                            required
+                                        />
+                                    </div>
+                                    <InputError message={errors.email} />
+                                </div>
                             </div>
 
-                            <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
-                                <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        required
-                                        tabIndex={2}
-                                        autoComplete="email"
-                                        name="email"
-                                        placeholder="name@example.com"
-                                        className={cn(
-                                            'pl-10 transition-shadow duration-300 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]',
-                                            errors.email &&
-                                                'border-destructive focus-visible:ring-destructive/20',
-                                        )}
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <div className="grid gap-2">
+                                    <Label
+                                        htmlFor="password"
+                                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80"
+                                    >
+                                        Password
+                                    </Label>
+                                    <div className="group relative">
+                                        <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                                        <Input
+                                            id="password"
+                                            type="password"
+                                            name="password"
+                                            placeholder="••••••••"
+                                            className={cn(
+                                                'h-11 rounded-xl border-zinc-200/80 pl-10 bg-zinc-50/80 transition-all duration-200 focus:ring-2 focus:ring-primary/20 dark:border-zinc-700/80 dark:bg-zinc-800/50',
+                                                errors.password &&
+                                                    'border-destructive focus:ring-destructive/20',
+                                            )}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label
+                                        htmlFor="password_confirmation"
+                                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80"
+                                    >
+                                        Confirm password
+                                    </Label>
+                                    <div className="group relative">
+                                        <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
+                                        <Input
+                                            id="password_confirmation"
+                                            type="password"
+                                            name="password_confirmation"
+                                            placeholder="••••••••"
+                                            className={cn(
+                                                'h-11 rounded-xl border-zinc-200/80 pl-10 bg-zinc-50/80 transition-all duration-200 focus:ring-2 focus:ring-primary/20 dark:border-zinc-700/80 dark:bg-zinc-800/50',
+                                                errors.password_confirmation &&
+                                                    'border-destructive focus:ring-destructive/20',
+                                            )}
+                                            required
+                                        />
+                                    </div>
+                                </div>
+                                <div className="sm:col-span-2">
+                                    <InputError
+                                        message={
+                                            errors.password ||
+                                            errors.password_confirmation
+                                        }
                                     />
                                 </div>
-                                <InputError message={errors.email} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="password">Password</Label>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-                                    <Input
-                                        id="password"
-                                        type="password"
-                                        required
-                                        tabIndex={3}
-                                        autoComplete="new-password"
-                                        name="password"
-                                        placeholder="••••••••"
-                                        className={cn(
-                                            'pl-10',
-                                            errors.password &&
-                                                'border-destructive focus-visible:ring-destructive/20',
-                                        )}
-                                    />
-                                </div>
-                                <InputError message={errors.password} />
-                            </div>
-
-                            <div className="grid gap-2">
-                                <Label htmlFor="password_confirmation">
-                                    Confirm password
-                                </Label>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-                                    <Input
-                                        id="password_confirmation"
-                                        type="password"
-                                        required
-                                        tabIndex={4}
-                                        autoComplete="new-password"
-                                        name="password_confirmation"
-                                        placeholder="••••••••"
-                                        className={cn(
-                                            'pl-10 transition-shadow duration-300 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]',
-                                            errors.password_confirmation &&
-                                                'border-destructive focus-visible:ring-destructive/20',
-                                        )}
-                                    />
-                                </div>
-                                <InputError message={errors.password_confirmation} />
                             </div>
 
                             <Button
                                 type="submit"
-                                className="mt-1 h-11 w-full font-medium"
-                                tabIndex={5}
-                                data-test="register-user-button"
+                                disabled={processing}
+                                className="group h-12 w-full rounded-xl bg-primary text-primary-foreground shadow-lg transition-all hover:translate-y-[-1px] hover:shadow-primary/25 active:scale-[0.98]"
                             >
-                                {processing && <Spinner />}
-                                Create account
+                                {processing ? (
+                                    <Spinner className="mr-2 h-4 w-4" />
+                                ) : (
+                                    <span className="flex items-center justify-center gap-2">
+                                        Get started
+                                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                                    </span>
+                                )}
                             </Button>
                         </div>
 
-                        <div className="border-t border-slate-200 pt-6 text-center dark:border-slate-800">
-                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                        <div className="relative pt-8">
+                            <div className="absolute inset-x-0 top-0 flex items-center gap-3">
+                                <span className="flex-1 border-t border-zinc-200 dark:border-zinc-800" />
+                                <span className="text-xs font-medium uppercase tracking-wider text-zinc-400">or</span>
+                                <span className="flex-1 border-t border-zinc-200 dark:border-zinc-800" />
+                            </div>
+                            <p className="relative flex justify-center pt-6 text-sm text-muted-foreground">
                                 Already have an account?{' '}
                                 <TextLink
                                     href={login()}
-                                    tabIndex={6}
-                                    className="inline-block rounded-lg px-2 py-1 font-medium text-slate-900 underline-offset-4 transition-all duration-300 hover:underline hover:shadow-[0_0_12px_rgba(16,185,129,0.3)] dark:text-white"
+                                    className="font-semibold text-primary underline-offset-4 hover:underline"
                                 >
                                     Sign in
                                 </TextLink>

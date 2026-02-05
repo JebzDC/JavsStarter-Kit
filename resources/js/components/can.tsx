@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { useCan } from '@/hooks/use-can';
+import { useAuthPermissions } from '@/hooks/use-auth';
 
-interface CanProps {
+export interface CanProps {
     permission?: string | string[];
     role?: string | string[];
     children: ReactNode;
@@ -43,7 +43,9 @@ interface CanProps {
  * </Can>
  */
 export function Can({ permission, role, children, fallback = null, matchAll = false }: CanProps) {
-    const { can, canAny, canAll, hasRole, hasAnyRole, hasAllRoles } = useCan();
+    const { canPermission, canAny, canAll, hasRole, hasAnyRole, hasAllRoles } =
+        useAuthPermissions();
+    const can = canPermission;
 
     let hasAccess = false;
 
@@ -66,4 +68,75 @@ export function Can({ permission, role, children, fallback = null, matchAll = fa
     }
 
     return hasAccess ? <>{children}</> : <>{fallback}</>;
+}
+
+/**
+ * Renders children when the user does NOT have the given permission or role.
+ * Like Blade's @cannot directive.
+ *
+ * @example
+ * <Cannot permission="manage users">
+ *     <span>You cannot manage users</span>
+ * </Cannot>
+ *
+ * @example
+ * <Cannot role="admin">
+ *     <GuestContent />
+ * </Cannot>
+ */
+export function Cannot({
+    permission,
+    role,
+    children,
+    fallback = null,
+    matchAll = false,
+}: CanProps) {
+    const { canPermission, canAny, canAll, hasRole, hasAnyRole, hasAllRoles } =
+        useAuthPermissions();
+    const can = canPermission;
+
+    let hasAccess = false;
+    if (permission) {
+        if (Array.isArray(permission)) {
+            hasAccess = matchAll ? canAll(permission) : canAny(permission);
+        } else {
+            hasAccess = can(permission);
+        }
+    }
+    if (!hasAccess && role) {
+        if (Array.isArray(role)) {
+            hasAccess = matchAll ? hasAllRoles(role) : hasAnyRole(role);
+        } else {
+            hasAccess = hasRole(role);
+        }
+    }
+
+    return !hasAccess ? <>{children}</> : <>{fallback}</>;
+}
+
+/**
+ * Shorthand for role-based visibility. Renders children when user has the given role(s).
+ * Like Blade's @role directive.
+ *
+ * @example
+ * <HasRole role="editor">
+ *     <EditorTools />
+ * </HasRole>
+ *
+ * @example
+ * <HasRole role={['admin', 'super-admin']}>
+ *     <AdminSection />
+ * </HasRole>
+ */
+export function HasRole({
+    role,
+    children,
+    fallback = null,
+    matchAll = false,
+}: Omit<CanProps, 'permission'>) {
+    return (
+        <Can role={role} fallback={fallback} matchAll={matchAll}>
+            {children}
+        </Can>
+    );
 }

@@ -2,7 +2,7 @@ import InputError from '@/components/input-error';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+import { MultiSelectSearch } from '@/components/ui/multi-select-search';
 import { StatCard } from '@/components/stat-card';
 import {
     Dialog,
@@ -17,6 +17,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { SuccessNotification, type SuccessVariant } from '@/components/success-notification';
 import { destroy, index, store, update } from '@/routes/admin/users';
 import type { BreadcrumbItem, Permission, Role, User } from '@/types';
 import { Head, router, useForm, Link } from '@inertiajs/react';
@@ -74,6 +75,7 @@ export default function UsersIndex({ users: usersProp, roles, permissions, searc
     const [isCreateOpen, setIsCreateOpen] = useState(false);
     const [editingUser, setEditingUser] = useState<(User & { roles: Role[]; permissions: Permission[] }) | null>(null);
     const [deleteConfirm, setDeleteConfirm] = useState<User | null>(null);
+    const [successNotification, setSuccessNotification] = useState<{ variant: SuccessVariant } | null>(null);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -91,6 +93,7 @@ export default function UsersIndex({ users: usersProp, roles, permissions, searc
             onSuccess: () => {
                 setIsCreateOpen(false);
                 createForm.reset();
+                setSuccessNotification({ variant: 'created' });
             },
         });
     };
@@ -99,14 +102,20 @@ export default function UsersIndex({ users: usersProp, roles, permissions, searc
         e.preventDefault();
         if (!editingUser) return;
         editForm.put(update(editingUser.id).url, {
-            onSuccess: () => setEditingUser(null),
+            onSuccess: () => {
+                setEditingUser(null);
+                setSuccessNotification({ variant: 'updated' });
+            },
         });
     };
 
     const handleDelete = () => {
         if (!deleteConfirm) return;
         router.delete(destroy(deleteConfirm.id).url, {
-            onSuccess: () => setDeleteConfirm(null),
+            onSuccess: () => {
+                setDeleteConfirm(null);
+                setSuccessNotification({ variant: 'deleted' });
+            },
         });
     };
 
@@ -135,19 +144,8 @@ export default function UsersIndex({ users: usersProp, roles, permissions, searc
         setEditingUser(user);
     };
 
-    const toggleItem = (form: any, field: 'roles' | 'permissions', name: string) => {
-        const current = form.data[field];
-        const next = current.includes(name) ? current.filter((i: string) => i !== name) : [...current, name];
-        form.setData(field, next);
-    };
-
-    const groupedPermissions = permissions.reduce((groups, permission) => {
-        const parts = permission.name.split(/[.\s-]/);
-        const group = parts.length > 1 ? parts[0] : 'general';
-        if (!groups[group]) groups[group] = [];
-        groups[group].push(permission);
-        return groups;
-    }, {} as Record<string, Permission[]>);
+    const roleOptions = roles.map((r) => ({ value: r.name, label: r.name }));
+    const permissionOptions = permissions.map((p) => ({ value: p.name, label: p.name }));
 
     const UserFormFields = ({ form, isEdit = false }: { form: any; isEdit?: boolean }) => (
         <div className="grid gap-8 px-1 py-6">
@@ -172,6 +170,13 @@ export default function UsersIndex({ users: usersProp, roles, permissions, searc
                             <Input type={showPassword ? 'text' : 'password'} value={form.data.password} onChange={(e) => form.setData('password', e.target.value)} className="pr-10" />
                             <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute top-1/2 right-3 -translate-y-1/2 opacity-50"><Eye className="h-4 w-4" /></button>
                         </div>
+                        {(form.data.password.length > 0 && form.data.password.length < 8) && (
+                            <span className="text-xs text-destructive">Password should be 8 characters or more.</span>
+                        )}
+                        {form.data.password.length === 0 && !isEdit && (
+                            <span className="text-xs text-muted-foreground">Password should be 8 characters or more.</span>
+                        )}
+                        <InputError message={form.errors.password} />
                     </div>
                     <div className="space-y-2">
                         <Label>Confirm Password</Label>
@@ -179,6 +184,10 @@ export default function UsersIndex({ users: usersProp, roles, permissions, searc
                             <Input type={showConfirmPassword ? 'text' : 'password'} value={form.data.password_confirmation} onChange={(e) => form.setData('password_confirmation', e.target.value)} className="pr-10" />
                             <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute top-1/2 right-3 -translate-y-1/2 opacity-50"><Eye className="h-4 w-4" /></button>
                         </div>
+                        {form.data.password_confirmation.length > 0 && form.data.password !== form.data.password_confirmation && (
+                            <span className="text-xs text-destructive">Password and confirm password do not match.</span>
+                        )}
+                        <InputError message={form.errors.password_confirmation} />
                     </div>
                 </div>
             </section>
@@ -187,35 +196,29 @@ export default function UsersIndex({ users: usersProp, roles, permissions, searc
                 <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-primary/80 uppercase">
                     <ShieldCheck className="h-3.5 w-3.5" /> System Roles
                 </div>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                    {roles.map((role) => (
-                        <label key={role.id} className={`flex cursor-pointer items-center justify-between rounded-lg border p-3 transition-all ${form.data.roles.includes(role.name) ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'bg-background shadow-sm'}`}>
-                            <span className="text-sm font-medium">{role.name}</span>
-                            <Checkbox checked={form.data.roles.includes(role.name)} onCheckedChange={() => toggleItem(form, 'roles', role.name)} />
-                        </label>
-                    ))}
-                </div>
+                <MultiSelectSearch
+                    options={roleOptions}
+                    value={form.data.roles}
+                    onChange={(v) => form.setData('roles', v)}
+                    placeholder="Select roles..."
+                    searchPlaceholder="Search roles..."
+                    emptyMessage="No roles found."
+                />
             </section>
 
             <section className="space-y-4">
                 <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-primary/80 uppercase">
                     <Key className="h-3.5 w-3.5" /> Direct Permissions
                 </div>
-                <div className="rounded-xl border bg-muted/10 p-4 space-y-6">
-                    {Object.entries(groupedPermissions).map(([group, perms]) => (
-                        <div key={group} className="space-y-3">
-                            <h5 className="text-[10px] font-bold uppercase text-muted-foreground/70 tracking-widest pl-1">{group} Module</h5>
-                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                {perms.map((p) => (
-                                    <div key={p.id} className="flex items-center space-x-2 rounded-lg border border-border/50 bg-background px-3 py-2.5 shadow-sm hover:border-primary/30 transition-colors">
-                                        <Checkbox id={`perm-${p.id}-${isEdit ? 'edit' : 'create'}`} checked={form.data.permissions.includes(p.name)} onCheckedChange={() => toggleItem(form, 'permissions', p.name)} />
-                                        <Label htmlFor={`perm-${p.id}-${isEdit ? 'edit' : 'create'}`} className="flex-1 cursor-pointer text-xs font-medium">{p.name}</Label>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    ))}
-                </div>
+                <MultiSelectSearch
+                    options={permissionOptions}
+                    value={form.data.permissions}
+                    onChange={(v) => form.setData('permissions', v)}
+                    placeholder="Select permissions..."
+                    searchPlaceholder="Search permissions..."
+                    emptyMessage="No permissions found."
+                    maxBadges={4}
+                />
             </section>
         </div>
     );
@@ -224,10 +227,7 @@ export default function UsersIndex({ users: usersProp, roles, permissions, searc
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Users Management" />
             <div className="flex h-full min-w-0 flex-1 flex-col gap-6 p-4 sm:gap-8 sm:p-6 md:p-8">
-                <div className="border-b border-border/50 pb-6">
-                    <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">Users</h1>
-                    <p className="mt-1 text-sm text-muted-foreground sm:text-base">Manage administrative access and user profiles.</p>
-                </div>
+                
 
                 <div className="grid gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-3">
                     <StatCard label="Total Users" value={users.meta.total} subtext="Total registered accounts" icon={Users} variant="cyan" />
@@ -270,10 +270,7 @@ export default function UsersIndex({ users: usersProp, roles, permissions, searc
                 </div>
 
                 <Card className="overflow-hidden rounded-xl border border-border/60 bg-card/50 shadow-lg ring-1 ring-border/40 sm:rounded-2xl dark:border-border/40 dark:bg-card/30 dark:ring-border/20">
-                    <CardHeader className="border-b border-border/50 bg-muted/5 px-4 py-4 dark:bg-muted/10 sm:px-6 sm:py-5">
-                        <CardTitle className="text-sm font-bold tracking-tight sm:text-base">Member Directory</CardTitle>
-                        <p className="mt-0.5 text-xs text-muted-foreground sm:mt-1">View and manage all registered users</p>
-                    </CardHeader>
+                  
                     <div className="relative w-full overflow-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                         {users.data.length > 0 && (
                             <>
@@ -451,6 +448,13 @@ export default function UsersIndex({ users: usersProp, roles, permissions, searc
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <SuccessNotification
+                open={!!successNotification}
+                onOpenChange={(open) => !open && setSuccessNotification(null)}
+                variant={successNotification?.variant ?? 'created'}
+                resourceName="User"
+            />
         </AppLayout>
     );
 }

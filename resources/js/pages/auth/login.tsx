@@ -1,5 +1,5 @@
 import { Form, Head } from '@inertiajs/react';
-import { Lock, Mail } from 'lucide-react';
+import { Lock, Mail, ArrowRight } from 'lucide-react';
 import InputError from '@/components/input-error';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -27,12 +27,12 @@ export default function Login({
     return (
         <AuthLayout
             title="Welcome back"
-            description="Enter your credentials to access your account"
+            description="Enter your credentials to access your account."
         >
             <Head title="Log in" />
 
             {status && (
-                <div className="mb-6 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300">
+                <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/50 dark:text-emerald-300">
                     {status}
                 </div>
             )}
@@ -40,15 +40,21 @@ export default function Login({
             <Form
                 {...store.form()}
                 resetOnSuccess={['password']}
-                className="flex flex-col gap-6"
+                disableWhileProcessing
+                className="space-y-6"
             >
                 {({ processing, errors }) => (
                     <>
-                        <div className="grid gap-5">
+                        <div className="space-y-5">
                             <div className="grid gap-2">
-                                <Label htmlFor="email">Email address</Label>
-                                <div className="relative">
-                                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                                <Label
+                                    htmlFor="email"
+                                    className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80"
+                                >
+                                    Email address
+                                </Label>
+                                <div className="group relative">
+                                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                                     <Input
                                         id="email"
                                         type="email"
@@ -57,11 +63,11 @@ export default function Login({
                                         autoFocus
                                         tabIndex={1}
                                         autoComplete="email"
-                                        placeholder="name@example.com"
+                                        placeholder="name@company.com"
                                         className={cn(
-                                            'pl-10 transition-shadow duration-300 hover:shadow-[0_0_15px_rgba(16,185,129,0.2)]',
+                                            'h-11 rounded-xl border-zinc-200/80 pl-10 bg-zinc-50/80 transition-all duration-200 focus:ring-2 focus:ring-primary/20 dark:border-zinc-700/80 dark:bg-zinc-800/50',
                                             errors.email &&
-                                                'border-destructive focus-visible:ring-destructive/20',
+                                                'border-destructive focus:ring-destructive/20',
                                         )}
                                     />
                                 </div>
@@ -70,19 +76,24 @@ export default function Login({
 
                             <div className="grid gap-2">
                                 <div className="flex items-center justify-between">
-                                    <Label htmlFor="password">Password</Label>
+                                    <Label
+                                        htmlFor="password"
+                                        className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/80"
+                                    >
+                                        Password
+                                    </Label>
                                     {canResetPassword && (
                                         <TextLink
                                             href={request()}
-                                            className="inline-block rounded-lg px-2 py-1 text-sm text-slate-600 transition-all duration-300 hover:text-slate-900 hover:shadow-[0_0_12px_rgba(16,185,129,0.3)] dark:text-slate-400 dark:hover:text-white"
+                                            className="text-xs font-medium text-muted-foreground underline-offset-4 hover:text-primary"
                                             tabIndex={5}
                                         >
                                             Forgot password?
                                         </TextLink>
                                     )}
                                 </div>
-                                <div className="relative">
-                                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
+                                <div className="group relative">
+                                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />
                                     <Input
                                         id="password"
                                         type="password"
@@ -92,16 +103,16 @@ export default function Login({
                                         autoComplete="current-password"
                                         placeholder="••••••••"
                                         className={cn(
-                                            'pl-10',
+                                            'h-11 rounded-xl border-zinc-200/80 pl-10 bg-zinc-50/80 transition-all duration-200 focus:ring-2 focus:ring-primary/20 dark:border-zinc-700/80 dark:bg-zinc-800/50',
                                             errors.password &&
-                                                'border-destructive focus-visible:ring-destructive/20',
+                                                'border-destructive focus:ring-destructive/20',
                                         )}
                                     />
                                 </div>
                                 <InputError message={errors.password} />
                             </div>
 
-                            <div className="flex cursor-pointer items-center space-x-3 rounded-lg p-2 transition-shadow duration-300 hover:shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+                            <div className="flex cursor-pointer items-center gap-3 rounded-lg py-1">
                                 <Checkbox
                                     id="remember"
                                     name="remember"
@@ -109,7 +120,7 @@ export default function Login({
                                 />
                                 <Label
                                     htmlFor="remember"
-                                    className="cursor-pointer text-sm font-normal text-slate-600 dark:text-slate-400"
+                                    className="cursor-pointer text-sm font-normal text-muted-foreground"
                                 >
                                     Remember me for 30 days
                                 </Label>
@@ -117,24 +128,35 @@ export default function Login({
 
                             <Button
                                 type="submit"
-                                className="mt-1 h-11 w-full font-medium transition-shadow duration-300 hover:shadow-[0_0_25px_rgba(16,185,129,0.4)]"
-                                tabIndex={4}
                                 disabled={processing}
+                                tabIndex={4}
                                 data-test="login-button"
+                                className="group h-12 w-full rounded-xl bg-primary text-primary-foreground shadow-lg transition-all hover:translate-y-[-1px] hover:shadow-primary/25 active:scale-[0.98]"
                             >
-                                {processing && <Spinner />}
-                                Sign in
+                                {processing ? (
+                                    <Spinner className="mr-2 h-4 w-4" />
+                                ) : (
+                                    <span className="flex items-center justify-center gap-2">
+                                        Sign in
+                                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                                    </span>
+                                )}
                             </Button>
                         </div>
 
                         {canRegister && (
-                            <div className="border-t border-slate-200 pt-6 text-center dark:border-slate-800">
-                                <p className="text-sm text-slate-600 dark:text-slate-400">
-                                    Don't have an account?{' '}
+                            <div className="relative pt-8">
+                                <div className="absolute inset-x-0 top-0 flex items-center gap-3">
+                                    <span className="flex-1 border-t border-zinc-200 dark:border-zinc-800" />
+                                    <span className="text-xs font-medium uppercase tracking-wider text-zinc-400">or</span>
+                                    <span className="flex-1 border-t border-zinc-200 dark:border-zinc-800" />
+                                </div>
+                                <p className="relative flex justify-center pt-6 text-sm text-muted-foreground">
+                                    Don&apos;t have an account?{' '}
                                     <TextLink
                                         href={register()}
                                         tabIndex={5}
-                                        className="inline-block rounded-lg px-2 py-1 font-medium text-slate-900 underline-offset-4 transition-all duration-300 hover:underline hover:shadow-[0_0_12px_rgba(16,185,129,0.3)] dark:text-white"
+                                        className="font-semibold text-primary underline-offset-4 hover:underline"
                                     >
                                         Create account
                                     </TextLink>

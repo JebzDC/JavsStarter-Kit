@@ -13,6 +13,8 @@ export type User = {
 export type Auth = {
     user: User;
     permissions: string[];
+    /** Dynamic permission checks: auth.can['permission name'] (optional for backward compat) */
+    can?: Record<string, boolean>;
     roles: string[];
 };
 

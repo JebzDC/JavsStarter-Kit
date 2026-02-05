@@ -18,64 +18,38 @@ class RolesAndPermissionsSeeder extends Seeder
         // Reset cached roles and permissions
         Cache::forget('spatie.permission.cache');
 
-        // Create permissions
+        // Create permissions (admin + post-related)
         $permissions = [
-            // User management
-            'users.view',
-            'users.create',
-            'users.edit',
-            'users.delete',
-
-            // Role management
-            'roles.view',
-            'roles.create',
-            'roles.edit',
-            'roles.delete',
+            'manage users',
             'manage roles',
-
-            // Permission management
-            'permissions.view',
-            'permissions.create',
-            'permissions.edit',
-            'permissions.delete',
             'manage permissions',
-
-            // Content management (examples)
-            'posts.view',
-            'posts.create',
-            'posts.edit',
-            'posts.delete',
-            'posts.publish',
+            
         ];
 
         foreach ($permissions as $permission) {
             Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // Create roles and assign permissions
+        $allPermissions = Permission::all();
+
+        // Super-admin: all permissions (also bypassed via Gate::before)
+        $superAdminRole = Role::firstOrCreate(['name' => 'super-admin']);
+        $superAdminRole->syncPermissions($allPermissions);
+
+        // Admin: all permissions
         $adminRole = Role::firstOrCreate(['name' => 'admin']);
-        $adminRole->givePermissionTo(Permission::all());
+        $adminRole->syncPermissions($allPermissions);
 
         $editorRole = Role::firstOrCreate(['name' => 'editor']);
-        $editorRole->givePermissionTo([
-            'posts.view',
-            'posts.create',
-            'posts.edit',
-            'posts.publish',
-        ]);
+        $editorRole->syncPermissions([]);
 
         $userRole = Role::firstOrCreate(['name' => 'user']);
-        $userRole->givePermissionTo([
-            'posts.view',
-        ]);
+        $userRole->syncPermissions([]);
 
-        // Create super-admin role (gets all permissions via Gate::before)
-        Role::firstOrCreate(['name' => 'super-admin']);
-
-        // Assign admin role to the first user if exists
+        // Assign super-admin role to the first user (Super Admin account)
         $firstUser = User::first();
-        if ($firstUser && ! $firstUser->hasRole('admin')) {
-            $firstUser->assignRole('admin');
+        if ($firstUser && ! $firstUser->hasRole('super-admin')) {
+            $firstUser->assignRole('super-admin');
         }
     }
 }

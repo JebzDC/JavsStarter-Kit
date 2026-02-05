@@ -1,21 +1,21 @@
-import { Head, router, useForm } from '@inertiajs/react';
-import { 
-    Edit2, 
+import { Head, Link, router, useForm } from '@inertiajs/react';
+import {
+    Edit2,
     Key,
     Link2,
-    Plus, 
-    Shield, 
-    Trash2, 
-    Search, 
     MoreVertical,
+    Plus,
+    Search,
+    Shield,
+    Trash2,
 } from 'lucide-react';
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import InputError from '@/components/input-error';
 import { StatCard } from '@/components/stat-card';
 import { TableCard } from '@/components/table-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
+import { MultiSelectSearch } from '@/components/ui/multi-select-search';
 import {
     Dialog,
     DialogClose,
@@ -35,24 +35,74 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/app-layout';
+import { SuccessNotification, type SuccessVariant } from '@/components/success-notification';
 import { index, store, update, destroy } from '@/routes/admin/roles';
 import type { BreadcrumbItem, Permission, Role } from '@/types';
 
+type PaginatedRoles = {
+    data: Role[];
+    links: { url: string | null; label: string; active: boolean }[];
+    meta: { current_page: number; last_page: number; total: number; from: number; to: number };
+};
+
 interface RolesIndexProps {
-    roles: Role[];
+    roles: PaginatedRoles | Role[];
     permissions: Permission[];
+    search?: string;
 }
 
-const breadcrumbs: BreadcrumbItem[] = [
-    
-    { title: 'Roles', href: index().url },
-];
+function normalizeRoles(rolesProp: RolesIndexProps['roles'] | undefined): PaginatedRoles {
+    if (!rolesProp) {
+        return { data: [], links: [], meta: { current_page: 1, last_page: 1, total: 0, from: 0, to: 0 } };
+    }
+    if (Array.isArray(rolesProp)) {
+        return {
+            data: rolesProp,
+            links: [],
+            meta: {
+                current_page: 1,
+                last_page: 1,
+                total: rolesProp.length,
+                from: rolesProp.length ? 1 : 0,
+                to: rolesProp.length,
+            },
+        };
+    }
+    const data = rolesProp.data ?? [];
+    const links = rolesProp.links ?? [];
+    const meta = rolesProp.meta ?? {
+        current_page: 1,
+        last_page: 1,
+        total: data.length,
+        from: data.length ? 1 : 0,
+        to: data.length,
+    };
+    return { data, links, meta };
+}
 
-export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
+const breadcrumbs: BreadcrumbItem[] = [{ title: 'Roles', href: index().url }];
+
+export default function RolesIndex({ roles: rolesProp, permissions, search: initialSearch = '' }: RolesIndexProps) {
+    const roles = normalizeRoles(rolesProp);
     const [isCreateOpen, setIsCreateOpen] = useState<boolean>(false);
     const [editingRole, setEditingRole] = useState<Role | null>(null);
     const [deleteConfirm, setDeleteConfirm] = useState<Role | null>(null);
-    const [searchQuery, setSearchQuery] = useState<string>('');
+    const [successNotification, setSuccessNotification] = useState<{ variant: SuccessVariant } | null>(null);
+    const [searchQuery, setSearchQuery] = useState<string>(initialSearch);
+    const isFirstMount = useRef(true);
+
+    useEffect(() => setSearchQuery(initialSearch), [initialSearch]);
+    useEffect(() => {
+        if (isFirstMount.current) {
+            isFirstMount.current = false;
+            return;
+        }
+        const timeout = setTimeout(() => {
+            const params = searchQuery.trim() ? { search: searchQuery.trim() } : {};
+            router.get(index().url, params, { preserveState: true, preserveScroll: true });
+        }, 300);
+        return () => clearTimeout(timeout);
+    }, [searchQuery]);
 
     // Form Hooks with explicit type safety
     const createForm = useForm<{
@@ -71,18 +121,13 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
         permissions: [],
     });
 
-    const filteredRoles = useMemo(() => {
-        return roles.filter(role => 
-            role.name.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [roles, searchQuery]);
-
     const handleCreate = (e: React.FormEvent): void => {
         e.preventDefault();
         createForm.post(store().url, {
             onSuccess: () => {
                 setIsCreateOpen(false);
                 createForm.reset();
+                setSuccessNotification({ variant: 'created' });
             },
         });
     };
@@ -94,6 +139,7 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
             onSuccess: () => {
                 setEditingRole(null);
                 editForm.reset();
+                setSuccessNotification({ variant: 'updated' });
             },
         });
     };
@@ -101,42 +147,27 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
     const handleDelete = (): void => {
         if (!deleteConfirm) return;
         router.delete(destroy(deleteConfirm.id).url, {
-            onSuccess: () => setDeleteConfirm(null),
+            onSuccess: () => {
+                setDeleteConfirm(null);
+                setSuccessNotification({ variant: 'deleted' });
+            },
         });
     };
 
-    const togglePermission = (
-        form: ReturnType<typeof useForm<{ name: string; permissions: string[] }>>,
-        permissionName: string
-    ): void => {
-        const current = form.data.permissions;
-        if (current.includes(permissionName)) {
-            form.setData('permissions', current.filter((p) => p !== permissionName));
-        } else {
-            form.setData('permissions', [...current, permissionName]);
-        }
-    };
+    const permissionOptions = permissions.map((p) => ({ value: p.name, label: p.name }));
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Roles Management" />
 
             <div className="w-full space-y-8 px-6 py-6 md:px-4">
-                {/* Page header */}
-                <div>
-                    <h1 className="text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
-                        Roles
-                    </h1>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                        Manage access roles and their permissions.
-                    </p>
-                </div>
+                
 
                 {/* Stat cards */}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     <StatCard
                         label="Total Roles"
-                        value={roles.length}
+                        value={roles.meta.total}
                         subtext="Defined system roles"
                         icon={Shield}
                         variant="cyan"
@@ -150,8 +181,8 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                     />
                     <StatCard
                         label="Permission Assignments"
-                        value={roles.reduce((sum, r) => sum + r.permissions.length, 0)}
-                        subtext="Role–permission links"
+                        value={roles.data.reduce((sum, r) => sum + r.permissions.length, 0)}
+                        subtext="On this page"
                         icon={Link2}
                         variant="pink"
                     />
@@ -160,7 +191,7 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                 {/* Roles table card */}
                 <TableCard
                     title="Roles"
-                    count={filteredRoles.length}
+                    count={roles.meta.total}
                     defaultOpen={true}
                     headerRight={
                         <>
@@ -201,21 +232,15 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                                             </div>
                                             <div className="space-y-2">
                                                 <Label>Permissions</Label>
-                                                <div className="grid max-h-[220px] gap-2 overflow-y-auto rounded-lg border border-border/80 bg-muted/30 p-3">
-                                                    {permissions.map((perm) => (
-                                                        <label
-                                                            key={perm.id}
-                                                            className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 text-sm hover:bg-muted/50"
-                                                        >
-                                                            <Checkbox
-                                                                id={`create-${perm.id}`}
-                                                                checked={createForm.data.permissions.includes(perm.name)}
-                                                                onCheckedChange={() => togglePermission(createForm, perm.name)}
-                                                            />
-                                                            <span className="font-medium text-foreground">{perm.name}</span>
-                                                        </label>
-                                                    ))}
-                                                </div>
+                                                <MultiSelectSearch
+                                                    options={permissionOptions}
+                                                    value={createForm.data.permissions}
+                                                    onChange={(v) => createForm.setData('permissions', v)}
+                                                    placeholder="Select permissions..."
+                                                    searchPlaceholder="Search permissions..."
+                                                    emptyMessage="No permissions found."
+                                                    maxBadges={4}
+                                                />
                                             </div>
                                         </div>
                                         <DialogFooter className="gap-2">
@@ -229,24 +254,25 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                         </>
                     }
                 >
-                    {filteredRoles.length > 0 ? (
-                        <div className="overflow-x-auto">
-                            <table className="w-full min-w-[520px] text-sm">
-                                <thead>
-                                    <tr className="border-b border-border/60 bg-muted/20 dark:bg-muted/30">
-                                        <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-5 sm:py-4">
-                                            Role
-                                        </th>
-                                        <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-5 sm:py-4">
-                                            Permissions
-                                        </th>
-                                        <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-5 sm:py-4">
-                                            Actions
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-border/40">
-                                    {filteredRoles.map((role, idx) => (
+                    {roles.data.length > 0 ? (
+                        <>
+                            <div className="overflow-x-auto">
+                                <table className="w-full min-w-[520px] text-sm">
+                                    <thead>
+                                        <tr className="border-b border-border/60 bg-muted/20 dark:bg-muted/30">
+                                            <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-5 sm:py-4">
+                                                Role
+                                            </th>
+                                            <th className="px-4 py-3 text-left text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-5 sm:py-4">
+                                                Permissions
+                                            </th>
+                                            <th className="px-4 py-3 text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground sm:px-5 sm:py-4">
+                                                Actions
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-border/40">
+                                        {roles.data.map((role, idx) => (
                                         <tr
                                             key={role.id}
                                             className={`transition-colors hover:bg-muted/20 dark:hover:bg-muted/25 ${idx % 2 === 1 ? 'bg-muted/[0.03] dark:bg-muted/[0.05]' : ''}`}
@@ -318,18 +344,39 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                                                 </DropdownMenu>
                                             </td>
                                         </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="flex flex-col gap-4 border-t border-border/50 bg-muted/[0.02] px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:bg-muted/5">
+                                <div className="text-sm text-muted-foreground">
+                                    Showing <span className="font-semibold text-foreground">{roles.meta.from}</span> to{' '}
+                                    <span className="font-semibold text-foreground">{roles.meta.to}</span> of{' '}
+                                    <span className="font-semibold text-foreground">{roles.meta.total}</span> roles
+                                </div>
+                                <div className="flex flex-wrap items-center justify-center gap-1.5 sm:justify-end">
+                                    {roles.links.map((link, i) => (
+                                        <Link
+                                            key={i}
+                                            href={link.url || '#'}
+                                            preserveScroll
+                                            className={`flex h-9 min-w-[36px] items-center justify-center rounded-lg px-3 text-sm font-medium transition-all ${!link.url ? 'pointer-events-none cursor-default opacity-40' : 'hover:bg-muted hover:text-foreground'} ${link.active ? 'bg-primary text-primary-foreground shadow-sm' : 'border border-border/60 bg-background dark:border-border/50'}`}
+                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                        />
                                     ))}
-                                </tbody>
-                            </table>
-                        </div>
+                                </div>
+                            </div>
+                        </>
                     ) : (
                         <div className="flex flex-col items-center justify-center px-4 py-12 text-center">
                             <div className="rounded-full bg-muted/50 p-4 dark:bg-muted/80">
                                 <Shield className="h-10 w-10 text-muted-foreground/50" />
                             </div>
-                            <p className="mt-4 font-medium text-muted-foreground">No roles match your search</p>
+                            <p className="mt-4 font-medium text-muted-foreground">
+                                {roles.meta.total === 0 ? 'No roles yet' : 'No roles match your search'}
+                            </p>
                             <p className="mt-1 text-sm text-muted-foreground/80">
-                                Try a different search or create a new role.
+                                {roles.meta.total === 0 ? 'Create your first role to get started.' : 'Try a different search or create a new role.'}
                             </p>
                         </div>
                     )}
@@ -359,21 +406,15 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                             </div>
                             <div className="space-y-2">
                                 <Label>Permissions</Label>
-                                <div className="grid max-h-[220px] gap-2 overflow-y-auto rounded-lg border border-border/80 bg-muted/30 p-3">
-                                    {permissions.map((perm) => (
-                                        <label
-                                            key={perm.id}
-                                            className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 text-sm hover:bg-muted/50"
-                                        >
-                                            <Checkbox
-                                                id={`edit-${perm.id}`}
-                                                checked={editForm.data.permissions.includes(perm.name)}
-                                                onCheckedChange={() => togglePermission(editForm, perm.name)}
-                                            />
-                                            <span className="font-medium text-foreground">{perm.name}</span>
-                                        </label>
-                                    ))}
-                                </div>
+                                <MultiSelectSearch
+                                    options={permissionOptions}
+                                    value={editForm.data.permissions}
+                                    onChange={(v) => editForm.setData('permissions', v)}
+                                    placeholder="Select permissions..."
+                                    searchPlaceholder="Search permissions..."
+                                    emptyMessage="No permissions found."
+                                    maxBadges={4}
+                                />
                             </div>
                         </div>
                         <DialogFooter className="gap-2">
@@ -407,6 +448,13 @@ export default function RolesIndex({ roles, permissions }: RolesIndexProps) {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
+
+            <SuccessNotification
+                open={!!successNotification}
+                onOpenChange={(open) => !open && setSuccessNotification(null)}
+                variant={successNotification?.variant ?? 'created'}
+                resourceName="Role"
+            />
         </AppLayout>
     );
 }

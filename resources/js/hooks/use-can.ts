@@ -1,50 +1,32 @@
 import { usePage } from '@inertiajs/react';
 import type { SharedData } from '@/types';
 
+/**
+ * @deprecated Use useAuthPermissions() from '@/hooks/use-auth' for the same API (can, hasRole, etc.).
+ * Permission checks now use auth.can (dynamic); roles use auth.roles.
+ */
 export function useCan() {
     const { auth } = usePage<SharedData>().props;
+    const canRecord = auth?.can ?? {};
+    const permissions = auth?.permissions ?? [];
+    const roles = auth?.roles ?? [];
 
-    /**
-     * Check if the user has a specific permission
-     */
-    const can = (permission: string): boolean => {
-        return auth?.permissions?.includes(permission) ?? false;
-    };
+    const can = (permission: string): boolean =>
+        Boolean(canRecord[permission] ?? permissions.includes(permission));
 
-    /**
-     * Check if the user has any of the given permissions
-     */
-    const canAny = (permissions: string[]): boolean => {
-        return permissions.some((permission) => can(permission));
-    };
+    const canAny = (permissionsList: string[]): boolean =>
+        permissionsList.some((p) => can(p));
 
-    /**
-     * Check if the user has all of the given permissions
-     */
-    const canAll = (permissions: string[]): boolean => {
-        return permissions.every((permission) => can(permission));
-    };
+    const canAll = (permissionsList: string[]): boolean =>
+        permissionsList.every((p) => can(p));
 
-    /**
-     * Check if the user has a specific role
-     */
-    const hasRole = (role: string): boolean => {
-        return auth?.roles?.includes(role) ?? false;
-    };
+    const hasRole = (role: string): boolean => roles.includes(role);
 
-    /**
-     * Check if the user has any of the given roles
-     */
-    const hasAnyRole = (roles: string[]): boolean => {
-        return roles.some((role) => hasRole(role));
-    };
+    const hasAnyRole = (rolesList: string[]): boolean =>
+        rolesList.some((r) => hasRole(r));
 
-    /**
-     * Check if the user has all of the given roles
-     */
-    const hasAllRoles = (roles: string[]): boolean => {
-        return roles.every((role) => hasRole(role));
-    };
+    const hasAllRoles = (rolesList: string[]): boolean =>
+        rolesList.every((r) => hasRole(r));
 
     return {
         can,
@@ -53,7 +35,7 @@ export function useCan() {
         hasRole,
         hasAnyRole,
         hasAllRoles,
-        permissions: auth?.permissions ?? [],
-        roles: auth?.roles ?? [],
+        permissions,
+        roles,
     };
 }
